@@ -59,6 +59,11 @@ dependencies {
     implementation(libs.okhttp.logging)
     implementation(libs.moshi.kotlin)
 
+    // Compose ViewModel & StateFlow
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
