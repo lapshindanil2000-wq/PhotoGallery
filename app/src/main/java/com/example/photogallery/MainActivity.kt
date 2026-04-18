@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -88,7 +89,6 @@ fun PhotoGalleryApp(viewModel: PhotoGalleryViewModel) {
                     }
                 },
                 actions = {
-                    // Кнопка меню (три точки)
                     IconButton(onClick = { menuExpanded = true }) {
                         Text("⋮")
                     }
@@ -129,6 +129,7 @@ fun PhotoGalleryApp(viewModel: PhotoGalleryViewModel) {
 fun PhotoGalleryScreen(viewModel: PhotoGalleryViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var searchText by remember { mutableStateOf("") }
+    var generationPrompt by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Gray),
@@ -150,6 +151,45 @@ fun PhotoGalleryScreen(viewModel: PhotoGalleryViewModel) {
                     }
                 }
                 Column {
+                    // Поле для ввода запроса генерации (светлая тема)
+                    OutlinedTextField(
+                        value = generationPrompt,
+                        onValueChange = { generationPrompt = it },
+                        label = { Text("Prompt for generation (e.g. 'cute puppy')") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Blue,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.Blue,
+                            unfocusedLabelColor = Color.DarkGray,
+                            cursorColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        )
+                    )
+                    // Кнопка генерации (синяя)
+                    Button(
+                        onClick = {
+                            if (generationPrompt.isNotBlank()) {
+                                viewModel.generateImagesByUserPrompt(generationPrompt)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Blue,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Generate 5 images")
+                    }
+                    // Поле поиска (фильтрация, светлая тема)
                     OutlinedTextField(
                         value = searchText,
                         onValueChange = { searchText = it },
@@ -189,8 +229,14 @@ fun PhotoGalleryScreen(viewModel: PhotoGalleryViewModel) {
             }
             is PhotoGalleryUiState.Error -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Error: ${(uiState as PhotoGalleryUiState.Error).message}", color = Color.Red, modifier = Modifier.padding(16.dp))
-                    Button(onClick = { viewModel.generateImages() }) { Text("Retry") }
+                    Text(
+                        text = "Error: ${(uiState as PhotoGalleryUiState.Error).message}",
+                        color = Color.Red,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    Button(onClick = { viewModel.generateImagesByUserPrompt(generationPrompt.ifBlank { "a beautiful landscape" }) }) {
+                        Text("Retry")
+                    }
                 }
             }
         }

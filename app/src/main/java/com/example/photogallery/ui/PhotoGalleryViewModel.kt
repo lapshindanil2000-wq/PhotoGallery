@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 sealed class PhotoGalleryUiState {
     object Loading : PhotoGalleryUiState()
@@ -29,29 +30,23 @@ class PhotoGalleryViewModel(
     private val _favorites = MutableStateFlow<List<FavoritePhoto>>(emptyList())
     val favorites: StateFlow<List<FavoritePhoto>> = _favorites.asStateFlow()
 
-    private val prompts = listOf(
-        "a cute cat in space",
-        "a beautiful sunset over mountains",
-        "a futuristic city with flying cars",
-        "a serene lake with autumn trees",
-        "a robot painting in an art studio"
-    )
-
     init {
-        generateImages()
+        generateImagesByUserPrompt("a beautiful landscape")
         loadFavorites()
     }
 
-    fun generateImages() {
+    fun generateImagesByUserPrompt(userPrompt: String) {
         viewModelScope.launch {
             _uiState.value = PhotoGalleryUiState.Loading
             try {
                 val photos = mutableListOf<Photo>()
-                for (prompt in prompts) {
-                    val bitmap = generateImageWithRetry(prompt, maxRetries = 3)
+                for (i in 1..5) {
+                    // Уникальный промпт для каждого изображения (добавляем случайный суффикс)
+                    val uniquePrompt = "$userPrompt (variant ${Random.nextInt(1000, 9999)})"
+                    val bitmap = generateImageWithRetry(uniquePrompt, maxRetries = 3)
                     if (bitmap != null) {
-                        val url = "https://image.pollinations.ai/image/${prompt.replace(" ", "%20")}?width=512&height=512"
-                        photos.add(Photo(prompt = prompt, url = url))
+                        val url = "https://image.pollinations.ai/image/${uniquePrompt.replace(" ", "%20")}?width=512&height=512"
+                        photos.add(Photo(prompt = uniquePrompt, url = url))
                     }
                 }
                 if (photos.isEmpty()) {
