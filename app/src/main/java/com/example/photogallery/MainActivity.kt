@@ -20,10 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PhotoGalleryTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    PhotoGalleryScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -31,17 +28,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun PhotoGalleryScreen(modifier: Modifier = Modifier) {
     Text(
-        text = "Hello $name!",
+        text = "Photo Gallery Screen",
         modifier = modifier
     )
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun PhotoGalleryScreenPreview() {
     PhotoGalleryTheme {
-        Greeting("Android")
+        PhotoGalleryScreen()
     }
 }
