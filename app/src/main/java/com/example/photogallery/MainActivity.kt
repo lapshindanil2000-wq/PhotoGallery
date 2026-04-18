@@ -23,10 +23,13 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,11 +88,7 @@ fun PhotoGalleryApp(viewModel: PhotoGalleryViewModel) {
                     }
                 },
                 actions = {
-                    if (!showFavorites) {
-                        IconButton(onClick = { /* TODO: поиск */ }) {
-                            Icon(Icons.Default.Search, contentDescription = "Search")
-                        }
-                    }
+                    // Кнопка меню (три точки)
                     IconButton(onClick = { menuExpanded = true }) {
                         Text("⋮")
                     }
@@ -129,6 +128,7 @@ fun PhotoGalleryApp(viewModel: PhotoGalleryViewModel) {
 @Composable
 fun PhotoGalleryScreen(viewModel: PhotoGalleryViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var searchText by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier.fillMaxSize().background(Color.Gray),
@@ -143,9 +143,47 @@ fun PhotoGalleryScreen(viewModel: PhotoGalleryViewModel) {
             }
             is PhotoGalleryUiState.Success -> {
                 val photos = (uiState as PhotoGalleryUiState.Success).photos
-                LazyColumn {
-                    items(photos) { photo ->
-                        PhotoItem(photo = photo, onItemClick = { viewModel.saveToFavorites(photo) })
+                val filteredPhotos by remember(searchText, photos) {
+                    derivedStateOf {
+                        if (searchText.isBlank()) photos
+                        else photos.filter { it.prompt.contains(searchText, ignoreCase = true) }
+                    }
+                }
+                Column {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        label = { Text("Search by keyword") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        singleLine = true,
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.Blue,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedLabelColor = Color.Blue,
+                            unfocusedLabelColor = Color.DarkGray,
+                            cursorColor = Color.Black,
+                            focusedTextColor = Color.Black,
+                            unfocusedTextColor = Color.Black,
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White
+                        )
+                    )
+                    LazyColumn {
+                        items(filteredPhotos) { photo ->
+                            PhotoItem(photo = photo, onItemClick = { viewModel.saveToFavorites(photo) })
+                        }
+                        if (filteredPhotos.isEmpty() && searchText.isNotBlank()) {
+                            item {
+                                Text(
+                                    text = "No results for \"$searchText\"",
+                                    modifier = Modifier.padding(16.dp),
+                                    color = Color.White
+                                )
+                            }
+                        }
                     }
                 }
             }
